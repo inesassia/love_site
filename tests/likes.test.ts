@@ -7,10 +7,6 @@ afterEach(async () => {
   await resetDb()
 })
 
-async function createUser(email: string) {
-  return prisma.user.create({ data: { email, passwordHash: 'x' } })
-}
-
 async function createUserWithProfile(email: string, gender: 'homme' | 'femme', suspended = false) {
   return prisma.user.create({
     data: {

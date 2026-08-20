@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { loadEnv } from '@/lib/env'
 
 const validEnv = {
+  // NODE_ENV is required by Next.js's augmentation of NodeJS.ProcessEnv, so the
+  // fixture has to carry it to actually satisfy the type `loadEnv` accepts.
+  NODE_ENV: 'test',
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/love_site',
   NEXTAUTH_SECRET: 'test-secret',
   NEXTAUTH_URL: 'http://localhost:3000',
