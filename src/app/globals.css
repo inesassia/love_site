@@ -550,9 +550,15 @@ textarea {
 .conversation-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   padding: 20px 26px;
   border-bottom: 1px solid var(--line);
+}
+.conversation-header-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .conversation-header h1 {
   font-size: 19px;
@@ -622,4 +628,67 @@ textarea {
 .conversation-composer .btn-primary {
   width: auto;
   padding: 12px 26px;
+}
+
+/* safety actions (report / block) */
+
+.safety-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.safety-btn {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 4px 0;
+}
+.safety-btn:hover {
+  color: var(--ink);
+}
+.safety-btn.danger {
+  color: var(--rose);
+}
+.safety-btn.danger:hover {
+  color: oklch(45% 0.2 350);
+}
+
+.card-safety {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.report-form {
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--surface-tint);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.report-form .field {
+  margin-bottom: 0;
+}
+.report-form-actions {
+  display: flex;
+  gap: 10px;
+}
+.report-form-actions .btn-primary {
+  width: auto;
+  padding: 11px 22px;
+  font-size: 13.5px;
+}
+.report-form-cancel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 11px 6px;
+}
+.report-form-cancel:hover {
+  color: var(--ink);
 }

@@ -11,6 +11,13 @@ type DiscoveredProfile = {
   photos: string[]
 }
 
+const REPORT_CATEGORIES = [
+  { value: 'faux_profil', label: 'Faux profil' },
+  { value: 'comportement_inapproprie', label: 'Comportement inapproprié' },
+  { value: 'contenu_offensant', label: 'Contenu offensant' },
+  { value: 'autre', label: 'Autre' },
+]
+
 export default function DiscoverPage() {
   const [profiles, setProfiles] = useState<DiscoveredProfile[]>([])
   const [city, setCity] = useState('')
@@ -19,6 +26,10 @@ export default function DiscoverPage() {
   const [error, setError] = useState<string | null>(null)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+  const [reportingId, setReportingId] = useState<string | null>(null)
+  const [reportCategory, setReportCategory] = useState(REPORT_CATEGORIES[0].value)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
 
   async function loadProfiles(event?: React.FormEvent) {
     event?.preventDefault()
@@ -66,6 +77,62 @@ export default function DiscoverPage() {
       }
     } catch (err) {
       setError('Erreur lors du like.')
+    }
+  }
+
+  async function handleBlock(userId: string) {
+    try {
+      const response = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockedUserId: userId }),
+      })
+
+      if (!response.ok) {
+        setError('Erreur lors du blocage.')
+        return
+      }
+
+      setProfiles((prev) => prev.filter((profile) => profile.userId !== userId))
+      if (reportingId === userId) {
+        setReportingId(null)
+      }
+    } catch (err) {
+      setError('Erreur lors du blocage.')
+    }
+  }
+
+  function openReportForm(userId: string) {
+    setReportingId(userId)
+    setReportCategory(REPORT_CATEGORIES[0].value)
+    setReportReason('')
+  }
+
+  async function handleReportSubmit(event: React.FormEvent, userId: string) {
+    event.preventDefault()
+    if (reportReason.trim() === '') return
+
+    setReportSubmitting(true)
+    try {
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportedUserId: userId, category: reportCategory, reason: reportReason }),
+      })
+
+      if (!response.ok) {
+        setError('Erreur lors du signalement.')
+        return
+      }
+
+      setReportingId(null)
+      setReportReason('')
+      setMatchMessage('Signalement envoyé. Merci pour votre vigilance.')
+      setTimeout(() => setMatchMessage(null), 3000)
+    } catch (err) {
+      setError('Erreur lors du signalement.')
+    } finally {
+      setReportSubmitting(false)
     }
   }
 
@@ -162,6 +229,66 @@ export default function DiscoverPage() {
                   <h2>{profile.firstName}</h2>
                   <p>{profile.city}</p>
                   <p>{profile.bio}</p>
+
+                  <div className="card-safety">
+                    <button type="button" className="safety-btn" onClick={() => openReportForm(profile.userId)}>
+                      Signaler
+                    </button>
+                    <button
+                      type="button"
+                      className="safety-btn danger"
+                      onClick={() => handleBlock(profile.userId)}
+                    >
+                      Bloquer
+                    </button>
+                  </div>
+
+                  {reportingId === profile.userId && (
+                    <form
+                      className="report-form"
+                      onSubmit={(event) => handleReportSubmit(event, profile.userId)}
+                    >
+                      <div className="field">
+                        <label>
+                          Motif
+                          <select value={reportCategory} onChange={(e) => setReportCategory(e.target.value)}>
+                            {REPORT_CATEGORIES.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      <div className="field">
+                        <label>
+                          Détails
+                          <textarea
+                            rows={3}
+                            value={reportReason}
+                            onChange={(e) => setReportReason(e.target.value)}
+                            placeholder="Décrivez la situation..."
+                          />
+                        </label>
+                      </div>
+                      <div className="report-form-actions">
+                        <button
+                          type="submit"
+                          className="btn-primary"
+                          disabled={reportSubmitting || reportReason.trim() === ''}
+                        >
+                          Envoyer le signalement
+                        </button>
+                        <button
+                          type="button"
+                          className="report-form-cancel"
+                          onClick={() => setReportingId(null)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               </li>
             )

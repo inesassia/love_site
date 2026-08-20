@@ -1,11 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import AppNav from '@/components/AppNav'
 
 const POLL_INTERVAL_MS = 4000
+
+const REPORT_CATEGORIES = [
+  { value: 'faux_profil', label: 'Faux profil' },
+  { value: 'comportement_inapproprie', label: 'Comportement inapproprié' },
+  { value: 'contenu_offensant', label: 'Contenu offensant' },
+  { value: 'autre', label: 'Autre' },
+]
 
 type Message = {
   id: string
@@ -36,13 +43,20 @@ type MatchItem = {
 export default function ConversationPage() {
   const params = useParams<{ matchId: string }>()
   const matchId = params.matchId
+  const router = useRouter()
 
   const [messages, setMessages] = useState<Message[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [otherUser, setOtherUser] = useState<MatchUser | null>(null)
+  const [otherUserId, setOtherUserId] = useState<string | null>(null)
   const [content, setContent] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [reporting, setReporting] = useState(false)
+  const [reportCategory, setReportCategory] = useState(REPORT_CATEGORIES[0].value)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   async function loadMessages() {
@@ -70,7 +84,9 @@ export default function ConversationPage() {
 
       const match = matches.find((m) => m.id === matchId)
       if (match) {
-        setOtherUser(match.userAId === myId ? match.userB : match.userA)
+        const other = match.userAId === myId ? match.userB : match.userA
+        setOtherUser(other)
+        setOtherUserId(other.id)
       }
     }
 
@@ -110,6 +126,55 @@ export default function ConversationPage() {
     }
   }
 
+  async function handleBlock() {
+    if (!otherUserId) return
+
+    try {
+      const response = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockedUserId: otherUserId }),
+      })
+
+      if (!response.ok) {
+        setError('Erreur lors du blocage.')
+        return
+      }
+
+      router.push('/matches')
+    } catch (err) {
+      setError('Erreur lors du blocage.')
+    }
+  }
+
+  async function handleReportSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!otherUserId || reportReason.trim() === '') return
+
+    setReportSubmitting(true)
+    try {
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportedUserId: otherUserId, category: reportCategory, reason: reportReason }),
+      })
+
+      if (!response.ok) {
+        setError('Erreur lors du signalement.')
+        return
+      }
+
+      setReporting(false)
+      setReportReason('')
+      setNotice('Signalement envoyé. Merci pour votre vigilance.')
+      setTimeout(() => setNotice(null), 3000)
+    } catch (err) {
+      setError('Erreur lors du signalement.')
+    } finally {
+      setReportSubmitting(false)
+    }
+  }
+
   const otherFirstName = otherUser?.profile?.firstName ?? 'Conversation'
   const otherPhoto = otherUser?.profile?.photos?.[0]
 
@@ -123,21 +188,80 @@ export default function ConversationPage() {
 
         <div className="card conversation-card">
           <div className="conversation-header">
-            <div className="conversation-header-photo">
-              {otherPhoto ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={otherPhoto} alt={`Photo de ${otherFirstName}`} />
-              ) : (
-                <span>{otherFirstName[0] ?? '?'}</span>
-              )}
+            <div className="conversation-header-identity">
+              <div className="conversation-header-photo">
+                {otherPhoto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={otherPhoto} alt={`Photo de ${otherFirstName}`} />
+                ) : (
+                  <span>{otherFirstName[0] ?? '?'}</span>
+                )}
+              </div>
+              <h1>{otherFirstName}</h1>
             </div>
-            <h1>{otherFirstName}</h1>
+            <div className="safety-actions">
+              <button
+                type="button"
+                className="safety-btn"
+                onClick={() => setReporting((prev) => !prev)}
+              >
+                Signaler
+              </button>
+              <button type="button" className="safety-btn danger" onClick={handleBlock}>
+                Bloquer
+              </button>
+            </div>
           </div>
 
           {error && (
             <p className="error-banner" role="alert" style={{ margin: '0 26px', marginTop: 18 }}>
               {error}
             </p>
+          )}
+          {notice && (
+            <p className="status-banner" role="status" style={{ margin: '0 26px', marginTop: 18 }}>
+              {notice}
+            </p>
+          )}
+
+          {reporting && (
+            <form className="report-form" onSubmit={handleReportSubmit} style={{ margin: '18px 26px 0' }}>
+              <div className="field">
+                <label>
+                  Motif
+                  <select value={reportCategory} onChange={(e) => setReportCategory(e.target.value)}>
+                    {REPORT_CATEGORIES.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="field">
+                <label>
+                  Détails
+                  <textarea
+                    rows={3}
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    placeholder="Décrivez la situation..."
+                  />
+                </label>
+              </div>
+              <div className="report-form-actions">
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={reportSubmitting || reportReason.trim() === ''}
+                >
+                  Envoyer le signalement
+                </button>
+                <button type="button" className="report-form-cancel" onClick={() => setReporting(false)}>
+                  Annuler
+                </button>
+              </div>
+            </form>
           )}
 
           <div className="conversation-thread">
