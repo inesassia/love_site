@@ -41,5 +41,12 @@ export async function getDiscoverableProfiles(userId: string, filters: Discovery
       ...(filters.denomination ? { denomination: filters.denomination } : {}),
       ...(Object.keys(birthDateFilter).length ? { birthDate: birthDateFilter } : {}),
     },
+    select: {
+      userId: true,
+      firstName: true,
+      city: true,
+      bio: true,
+      photos: true,
+    },
   })
 }

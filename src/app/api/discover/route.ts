@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import type { Denomination } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { getDiscoverableProfiles } from '@/lib/discovery'
+
+const VALID_DENOMINATIONS: Denomination[] = [
+  'evangelique',
+  'catholique',
+  'protestant',
+  'orthodoxe',
+  'autre',
+]
+
+function parseDenomination(value: string | null): Denomination | undefined {
+  return VALID_DENOMINATIONS.includes(value as Denomination) ? (value as Denomination) : undefined
+}
+
+function parseAge(value: string | null): number | undefined {
+  if (!value) return undefined
+  const parsed = Number(value)
+  return Number.isNaN(parsed) ? undefined : parsed
+}
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -13,9 +32,9 @@ export async function GET(request: NextRequest) {
   const profiles = await getDiscoverableProfiles((session.user as { id: string }).id, {
     city: searchParams.get('city') ?? undefined,
     country: searchParams.get('country') ?? undefined,
-    denomination: (searchParams.get('denomination') as never) ?? undefined,
-    minAge: searchParams.get('minAge') ? Number(searchParams.get('minAge')) : undefined,
-    maxAge: searchParams.get('maxAge') ? Number(searchParams.get('maxAge')) : undefined,
+    denomination: parseDenomination(searchParams.get('denomination')),
+    minAge: parseAge(searchParams.get('minAge')),
+    maxAge: parseAge(searchParams.get('maxAge')),
   })
 
   return NextResponse.json(profiles)

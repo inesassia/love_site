@@ -47,6 +47,16 @@ describe('getDiscoverableProfiles', () => {
     expect(results.map((p) => p.userId)).toEqual([her.id])
   })
 
+  it('only projects the fields the discover page needs, not sensitive profile data', async () => {
+    const me = await createUser({ email: 'me@example.com', gender: 'homme' })
+    await createUser({ email: 'her@example.com', gender: 'femme' })
+
+    const results = await getDiscoverableProfiles(me.id)
+
+    expect(results).toHaveLength(1)
+    expect(Object.keys(results[0]).sort()).toEqual(['bio', 'city', 'firstName', 'photos', 'userId'].sort())
+  })
+
   it('excludes suspended users', async () => {
     const me = await createUser({ email: 'me@example.com', gender: 'homme' })
     await createUser({ email: 'suspended@example.com', gender: 'femme', suspended: true })
