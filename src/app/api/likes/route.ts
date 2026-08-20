@@ -18,6 +18,10 @@ export async function POST(request: NextRequest) {
     const result = await likeUser((session.user as { id: string }).id, body.toUserId)
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 400 })
+    const message = (error as Error).message
+    // A rejected target is a bad request; a rejected *requester* (suspended or
+    // deleted account still holding a valid session) is a forbidden one.
+    const status = message === 'suspended' || message === 'user_not_found' ? 403 : 400
+    return NextResponse.json({ error: message }, { status })
   }
 }

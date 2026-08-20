@@ -62,7 +62,14 @@ export async function listMessages(matchId: string, requesterId: string) {
 
 export async function listMatchesForUser(userId: string) {
   const matches = await prisma.match.findMany({
-    where: { OR: [{ userAId: userId }, { userBId: userId }] },
+    // A suspension on the other participant must mask the match here too —
+    // otherwise a stale entry lingers in the list and only fails on open.
+    where: {
+      OR: [
+        { userAId: userId, userB: { suspended: false } },
+        { userBId: userId, userA: { suspended: false } },
+      ],
+    },
     include: {
       // Select only what the UI needs — a bare `include: { profile: true }`
       // on the User relation would also serialize passwordHash, email, role,

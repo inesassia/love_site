@@ -29,13 +29,20 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url)
-  const profiles = await getDiscoverableProfiles((session.user as { id: string }).id, {
-    city: searchParams.get('city') ?? undefined,
-    country: searchParams.get('country') ?? undefined,
-    denomination: parseDenomination(searchParams.get('denomination')),
-    minAge: parseAge(searchParams.get('minAge')),
-    maxAge: parseAge(searchParams.get('maxAge')),
-  })
 
-  return NextResponse.json(profiles)
+  try {
+    const profiles = await getDiscoverableProfiles((session.user as { id: string }).id, {
+      city: searchParams.get('city') ?? undefined,
+      country: searchParams.get('country') ?? undefined,
+      denomination: parseDenomination(searchParams.get('denomination')),
+      minAge: parseAge(searchParams.get('minAge')),
+      maxAge: parseAge(searchParams.get('maxAge')),
+    })
+
+    return NextResponse.json(profiles)
+  } catch (error) {
+    // Suspended (or deleted) accounts keep a valid session until it expires,
+    // so the feed itself has to turn them away.
+    return NextResponse.json({ error: (error as Error).message }, { status: 403 })
+  }
 }

@@ -89,6 +89,14 @@ describe('likeUser', () => {
     await expect(likeUser(alice.id, bob.id)).rejects.toThrow('invalid_target')
   })
 
+  it('rejects a like sent by a suspended user and creates no Like row', async () => {
+    const alice = await createUserWithProfile('alice@example.com', 'femme', true)
+    const bob = await createUserWithProfile('bob@example.com', 'homme')
+
+    await expect(likeUser(alice.id, bob.id)).rejects.toThrow('suspended')
+    expect(await prisma.like.count()).toBe(0)
+  })
+
   it('rejects liking a user when the liker is blocked', async () => {
     const alice = await createUserWithProfile('alice@example.com', 'femme')
     const bob = await createUserWithProfile('bob@example.com', 'homme')

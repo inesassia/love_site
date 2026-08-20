@@ -1,10 +1,15 @@
 import { prisma } from '@/lib/db'
 import { oppositeGender } from '@/lib/discovery'
+import { assertActiveUser } from '@/lib/users'
 
 export async function likeUser(fromUserId: string, toUserId: string) {
   if (fromUserId === toUserId) {
     throw new Error('cannot_like_self')
   }
+
+  // A suspended member keeps a valid session, so the liker's own status has to
+  // be re-checked here and not only the target's.
+  await assertActiveUser(fromUserId)
 
   // Validate that target is a legitimate candidate
   const fromProfile = await prisma.profile.findUnique({ where: { userId: fromUserId } })

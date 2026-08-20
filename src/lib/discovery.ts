@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { assertActiveUser } from '@/lib/users'
 import type { Denomination, Gender } from '@prisma/client'
 
 export type DiscoveryFilters = {
@@ -14,6 +15,8 @@ export function oppositeGender(gender: Gender): Gender {
 }
 
 export async function getDiscoverableProfiles(userId: string, filters: DiscoveryFilters = {}) {
+  await assertActiveUser(userId)
+
   const me = await prisma.profile.findUnique({ where: { userId } })
   if (!me) return []
 

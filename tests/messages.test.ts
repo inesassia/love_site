@@ -168,6 +168,15 @@ describe('listMatchesForUser', () => {
     expect(bobMatches.map((m) => m.id)).not.toContain(match.id)
   })
 
+  it('excludes a match once the other participant has been suspended', async () => {
+    const { alice, bob, match } = await createMatch()
+    await prisma.user.update({ where: { id: bob.id }, data: { suspended: true } })
+
+    const aliceMatches = await listMatchesForUser(alice.id)
+
+    expect(aliceMatches.map((m) => m.id)).not.toContain(match.id)
+  })
+
   it('excludes a match whose participants are no longer opposite genders', async () => {
     const { alice, bob, match } = await createMatch()
     await prisma.profile.update({ where: { userId: bob.id }, data: { gender: 'femme' } })

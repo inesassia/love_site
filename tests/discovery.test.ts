@@ -76,6 +76,19 @@ describe('getDiscoverableProfiles', () => {
     expect(results.map((p) => p.userId)).toEqual([parisienne.id])
   })
 
+  it('refuses to build a feed for a suspended requester', async () => {
+    const me = await createUser({ email: 'me@example.com', gender: 'homme', suspended: true })
+    await createUser({ email: 'her@example.com', gender: 'femme' })
+
+    await expect(getDiscoverableProfiles(me.id)).rejects.toThrow('suspended')
+  })
+
+  it('refuses to build a feed for a user that no longer exists', async () => {
+    await expect(getDiscoverableProfiles('00000000-0000-0000-0000-000000000000')).rejects.toThrow(
+      'user_not_found'
+    )
+  })
+
   it('excludes users that have blocked or been blocked by the requester', async () => {
     const me = await createUser({ email: 'me@example.com', gender: 'homme' })
     const blocked = await createUser({ email: 'blocked@example.com', gender: 'femme' })

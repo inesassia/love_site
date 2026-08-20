@@ -11,11 +11,12 @@ afterEach(async () => {
   await resetDb()
 })
 
-async function createUserWithProfile(email: string, gender: 'homme' | 'femme') {
+async function createUserWithProfile(email: string, gender: 'homme' | 'femme', suspended = false) {
   return prisma.user.create({
     data: {
       email,
       passwordHash: 'x',
+      suspended,
       profile: {
         create: {
           firstName: email,
@@ -57,6 +58,17 @@ describe('/api/discover', () => {
     expect(response.status).toBe(200)
     const body = await response.json()
     expect(body).toHaveLength(1)
+  })
+
+  it('returns 403 for a suspended requester instead of serving a feed', async () => {
+    const me = await createUserWithProfile('suspended@example.com', 'homme', true)
+    await createUserWithProfile('her@example.com', 'femme')
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: me.id } } as never)
+
+    const response = await GET(makeRequest('http://localhost/api/discover'))
+
+    expect(response.status).toBe(403)
+    expect((await response.json()).error).toBe('suspended')
   })
 
   it('ignores non-numeric minAge/maxAge instead of crashing', async () => {
