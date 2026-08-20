@@ -1,8 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AppNav from '@/components/AppNav'
+
+type ExistingProfile = {
+  firstName: string
+  birthDate: string
+  gender: string
+  city: string
+  country: string
+  bio: string
+  denomination: string
+  churchAttendance: string
+  marriageVision: string
+  favoriteVerseOrValue: string
+  photos: string[]
+}
 
 export default function ProfileEditPage() {
   const router = useRouter()
@@ -19,6 +33,51 @@ export default function ProfileEditPage() {
   const [error, setError] = useState<string | null>(null)
   const [photos, setPhotos] = useState<string[]>([])
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  // A profile that already exists must be loaded before the form is editable:
+  // submitting the empty defaults would otherwise blank out every field the
+  // member did not retype.
+  const [hasProfile, setHasProfile] = useState(false)
+  // If the existing profile could not be read we must not let the member save
+  // the blank defaults over it.
+  const [loadFailed, setLoadFailed] = useState(false)
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const response = await fetch('/api/profile')
+        if (!response.ok) {
+          setLoadFailed(true)
+          setError('Impossible de charger votre profil. Rechargez la page pour réessayer.')
+          return
+        }
+
+        const profile: ExistingProfile | null = await response.json()
+        // No profile yet (first-time creation): keep the blank defaults.
+        if (!profile) return
+
+        setHasProfile(true)
+        setFirstName(profile.firstName)
+        setBirthDate(profile.birthDate ? profile.birthDate.slice(0, 10) : '')
+        setGender(profile.gender)
+        setCity(profile.city)
+        setCountry(profile.country)
+        setBio(profile.bio)
+        setDenomination(profile.denomination)
+        setChurchAttendance(profile.churchAttendance)
+        setMarriageVision(profile.marriageVision)
+        setFavoriteVerseOrValue(profile.favoriteVerseOrValue)
+        setPhotos(profile.photos ?? [])
+      } catch {
+        setLoadFailed(true)
+        setError('Impossible de charger votre profil. Rechargez la page pour réessayer.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [])
 
   async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -70,6 +129,17 @@ export default function ProfileEditPage() {
     }
 
     router.push('/discover')
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <AppNav active="profile" />
+        <div className="app-main">
+          <p className="empty-state">Chargement…</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -135,6 +205,7 @@ export default function ProfileEditPage() {
                     type="button"
                     className={gender === 'homme' ? 'active' : ''}
                     onClick={() => setGender('homme')}
+                    disabled={hasProfile}
                   >
                     Homme
                   </button>
@@ -142,10 +213,16 @@ export default function ProfileEditPage() {
                     type="button"
                     className={gender === 'femme' ? 'active' : ''}
                     onClick={() => setGender('femme')}
+                    disabled={hasProfile}
                   >
                     Femme
                   </button>
                 </div>
+                {hasProfile && (
+                  <p className="hint">
+                    Le genre ne peut plus être modifié une fois le profil créé.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -290,7 +367,7 @@ export default function ProfileEditPage() {
               </p>
             )}
             <div className="form-actions">
-              <button type="submit" className="btn-primary">
+              <button type="submit" className="btn-primary" disabled={loadFailed}>
                 Enregistrer mon profil
               </button>
             </div>

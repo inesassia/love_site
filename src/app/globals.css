@@ -356,6 +356,10 @@ textarea {
   color: var(--violet-deep);
   box-shadow: 0 2px 8px -2px oklch(20% 0.05 300 / 0.25);
 }
+.toggle button:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
 
 .photo-grid {
   display: grid;
