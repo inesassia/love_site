@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,139 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum Gender {
+  homme
+  femme
+}
+
+enum Denomination {
+  evangelique
+  catholique
+  protestant
+  orthodoxe
+  autre
+}
+
+enum ChurchAttendance {
+  regulierement
+  occasionnellement
+  rarement
+}
+
+enum ReportCategory {
+  faux_profil
+  comportement_inapproprie
+  contenu_offensant
+  autre
+}
+
+enum ReportStatus {
+  en_attente
+  traite
+  ignore
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(user)
+  suspended    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  profile        Profile?
+  likesSent      Like[]    @relation("LikesSent")
+  likesReceived  Like[]    @relation("LikesReceived")
+  matchesAsA     Match[]   @relation("MatchUserA")
+  matchesAsB     Match[]   @relation("MatchUserB")
+  messagesSent   Message[]
+  reportsFiled   Report[]  @relation("ReportsFiled")
+  reportsAgainst Report[]  @relation("ReportsAgainst")
+  blocksMade     Block[]   @relation("BlocksMade")
+  blocksReceived Block[]   @relation("BlocksReceived")
+}
+
+model Profile {
+  userId               String           @id
+  user                 User             @relation(fields: [userId], references: [id])
+  firstName            String
+  birthDate            DateTime
+  gender               Gender
+  city                 String
+  country              String
+  bio                  String
+  denomination         Denomination
+  churchAttendance     ChurchAttendance
+  marriageVision       String
+  favoriteVerseOrValue String
+  photos               String[]         @default([])
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  createdAt  DateTime @default(now())
+
+  fromUser User @relation("LikesSent", fields: [fromUserId], references: [id])
+  toUser   User @relation("LikesReceived", fields: [toUserId], references: [id])
+
+  @@unique([fromUserId, toUserId])
+}
+
+model Match {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+
+  userA    User      @relation("MatchUserA", fields: [userAId], references: [id])
+  userB    User      @relation("MatchUserB", fields: [userBId], references: [id])
+  messages Message[]
+
+  @@unique([userAId, userBId])
+}
+
+model Message {
+  id       String   @id @default(uuid())
+  matchId  String
+  senderId String
+  content  String
+  sentAt   DateTime @default(now())
+  read     Boolean  @default(false)
+
+  match  Match @relation(fields: [matchId], references: [id])
+  sender User  @relation(fields: [senderId], references: [id])
+}
+
+model Report {
+  id             String         @id @default(uuid())
+  reporterId     String
+  reportedUserId String
+  category       ReportCategory
+  reason         String
+  status         ReportStatus   @default(en_attente)
+  createdAt      DateTime       @default(now())
+
+  reporter     User @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reportedUser User @relation("ReportsAgainst", fields: [reportedUserId], references: [id])
+}
+
+model Block {
+  id            String   @id @default(uuid())
+  blockerId     String
+  blockedUserId String
+  createdAt     DateTime @default(now())
+
+  blocker     User @relation("BlocksMade", fields: [blockerId], references: [id])
+  blockedUser User @relation("BlocksReceived", fields: [blockedUserId], references: [id])
+
+  @@unique([blockerId, blockedUserId])
 }
