@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import AppNav from '@/components/AppNav'
 
 type DiscoveredProfile = {
@@ -30,6 +31,11 @@ export default function DiscoverPage() {
   const [reportCategory, setReportCategory] = useState(REPORT_CATEGORIES[0].value)
   const [reportReason, setReportReason] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
+  // Number of photos on the member's *own* profile. `null` means we could not
+  // read it, in which case the feed is shown rather than gated — this is a
+  // profile-completion nudge, not a security boundary.
+  const [ownPhotoCount, setOwnPhotoCount] = useState<number | null>(null)
 
   async function loadProfiles(event?: React.FormEvent) {
     event?.preventDefault()
@@ -52,7 +58,25 @@ export default function DiscoverPage() {
   }
 
   useEffect(() => {
-    loadProfiles()
+    async function init() {
+      try {
+        const response = await fetch('/api/profile')
+        if (response.ok) {
+          const profile: { photos?: string[] } | null = await response.json()
+          const photoCount = profile?.photos?.length ?? 0
+          setOwnPhotoCount(photoCount)
+          // The spec requires a completed profile with at least one photo
+          // before any discovery access, so there is no feed to fetch yet.
+          if (photoCount === 0) return
+        }
+
+        await loadProfiles()
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -134,6 +158,44 @@ export default function DiscoverPage() {
     } finally {
       setReportSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <AppNav active="discover" />
+        <main className="app-main">
+          <p className="empty-state">Chargement…</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (ownPhotoCount === 0) {
+    return (
+      <div>
+        <AppNav active="discover" />
+        <main className="app-main">
+          <div className="discover-toolbar">
+            <div>
+              <h1>Découvrir</h1>
+            </div>
+          </div>
+          <div className="empty-state">
+            <p style={{ margin: '0 0 20px' }}>
+              Ajoutez au moins une photo à votre profil pour commencer à découvrir des profils.
+            </p>
+            <Link
+              href="/profile/edit"
+              className="btn-primary"
+              style={{ width: 'auto', padding: '13px 26px' }}
+            >
+              Compléter mon profil
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
