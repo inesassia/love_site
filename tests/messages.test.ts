@@ -74,6 +74,22 @@ describe('listMessages', () => {
 
     await expect(listMessages(match.id, stranger.id)).rejects.toThrow('not_a_participant')
   })
+
+  it('rejects reading a conversation once either participant has been suspended', async () => {
+    const { alice, bob, match } = await createMatch()
+    await sendMessage(match.id, alice.id, 'Avant la suspension')
+    await prisma.user.update({ where: { id: bob.id }, data: { suspended: true } })
+
+    await expect(listMessages(match.id, alice.id)).rejects.toThrow('suspended')
+  })
+
+  it('rejects reading a conversation once a block exists between the participants', async () => {
+    const { alice, bob, match } = await createMatch()
+    await sendMessage(match.id, alice.id, 'Avant le blocage')
+    await prisma.block.create({ data: { blockerId: bob.id, blockedUserId: alice.id } })
+
+    await expect(listMessages(match.id, alice.id)).rejects.toThrow('blocked')
+  })
 })
 
 describe('listMatchesForUser', () => {

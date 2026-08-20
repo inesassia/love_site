@@ -42,7 +42,8 @@ export async function sendMessage(matchId: string, senderId: string, content: st
 }
 
 export async function listMessages(matchId: string, requesterId: string) {
-  await assertParticipant(matchId, requesterId)
+  const match = await assertParticipant(matchId, requesterId)
+  await assertCanExchangeMessages(match)
   return prisma.message.findMany({ where: { matchId }, orderBy: { sentAt: 'asc' } })
 }
 
