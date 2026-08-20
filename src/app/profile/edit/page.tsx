@@ -16,6 +16,31 @@ export default function ProfileEditPage() {
   const [marriageVision, setMarriageVision] = useState('')
   const [favoriteVerseOrValue, setFavoriteVerseOrValue] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<string[]>([])
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadError(null)
+
+    const formData = new FormData()
+    formData.set('file', file)
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      setUploadError('Impossible d\'envoyer la photo. Vérifiez le format et la taille du fichier.')
+      return
+    }
+
+    const data = await response.json()
+    setPhotos(data.photos)
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -111,6 +136,20 @@ export default function ProfileEditPage() {
           required
         />
       </label>
+      <label>
+        Photos
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePhotoChange} />
+      </label>
+      {uploadError && <p role="alert">{uploadError}</p>}
+      {photos.length > 0 && (
+        <ul>
+          {photos.map((photoUrl) => (
+            <li key={photoUrl}>
+              <img src={photoUrl} alt="Photo de profil" width={120} />
+            </li>
+          ))}
+        </ul>
+      )}
       {error && <p role="alert">{error}</p>}
       <button type="submit">Enregistrer</button>
     </form>

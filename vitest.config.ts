@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    setupFiles: ['./tests/setup.ts'],
     // Run test files sequentially within a single thread. Several test files share one
     // real Postgres database and reuse literal fixture emails (e.g. alice@example.com);
     // running files in parallel worker threads let one file's resetDb()/inserts race
