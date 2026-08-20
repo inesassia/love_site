@@ -21,9 +21,28 @@ like mutuel, messagerie basique, et une modération minimale mais fonctionnelle.
 - **Base de données** : PostgreSQL, accédée via Prisma (migrations + typage)
 - **Authentification** : email + mot de passe, sessions via NextAuth
   (Credentials provider)
-- **Stockage des photos** : Vercel Blob
-- **Déploiement** : Vercel (app) + Neon ou équivalent (Postgres managé)
+- **Stockage des photos** : API S3-compatible (pas de solution propriétaire
+  Vercel) — voir "Déploiement" pour le mapping démo/production
 - **Langue** : interface en français
+
+### Déploiement : démo vs production
+
+Le site sera déployé sur un **VPS en production à terme**. Vercel est utilisé
+uniquement pour les **tests et la démo**. La stack est donc choisie pour
+rester portable entre les deux, sans dépendance à une brique propriétaire
+Vercel :
+
+| Composant       | Démo (Vercel)                    | Production (VPS)                        |
+|------------------|-----------------------------------|------------------------------------------|
+| App Next.js      | Déploiement Vercel standard       | `next start` (ou Docker) derrière un reverse proxy (nginx/Caddy) |
+| Base de données  | Neon (Postgres managé)            | Postgres self-hosté sur le VPS (ou Neon conservé si suffisant) |
+| Stockage photos  | Cloudflare R2 (API S3-compatible) | MinIO self-hosté sur le VPS (API S3-compatible) |
+
+Le code applicatif (accès au storage via le SDK S3, connexion Postgres via
+Prisma) ne change pas entre les deux environnements — seules les variables
+d'environnement (endpoint, credentials, connection string) diffèrent. Aucune
+fonctionnalité ne doit dépendre d'une API propriétaire Vercel (Blob, KV, Edge
+Config, etc.).
 
 ## Modèle de données
 
@@ -52,7 +71,8 @@ like mutuel, messagerie basique, et une modération minimale mais fonctionnelle.
   `régulièrement`, `occasionnellement`, `rarement`)
 - `marriageVision` : texte libre — vision du mariage / de la famille
 - `favoriteVerseOrValue` : texte libre — verset ou valeur préférée
-- `photos` : liste d'URLs (1 à 6), stockées via Vercel Blob
+- `photos` : liste d'URLs (1 à 6), stockées via un stockage S3-compatible
+  (Cloudflare R2 en démo, MinIO sur le VPS en production)
 
 ### Like
 - `fromUserId`
