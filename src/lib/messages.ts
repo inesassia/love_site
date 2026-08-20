@@ -48,7 +48,7 @@ export async function listMessages(matchId: string, requesterId: string) {
 }
 
 export async function listMatchesForUser(userId: string) {
-  return prisma.match.findMany({
+  const matches = await prisma.match.findMany({
     where: { OR: [{ userAId: userId }, { userBId: userId }] },
     include: {
       // Select only what the UI needs — a bare `include: { profile: true }`
@@ -58,5 +58,19 @@ export async function listMatchesForUser(userId: string) {
       userB: { select: { id: true, profile: true } },
     },
     orderBy: { createdAt: 'desc' },
+  })
+
+  // A block (either direction) must mask the match everywhere in the app,
+  // including this list — not just once its conversation is opened.
+  const blocks = await prisma.block.findMany({
+    where: { OR: [{ blockerId: userId }, { blockedUserId: userId }] },
+  })
+  const blockedIds = new Set(
+    blocks.map((b) => (b.blockerId === userId ? b.blockedUserId : b.blockerId))
+  )
+
+  return matches.filter((match) => {
+    const otherId = match.userAId === userId ? match.userBId : match.userAId
+    return !blockedIds.has(otherId)
   })
 }

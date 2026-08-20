@@ -114,4 +114,15 @@ describe('listMatchesForUser', () => {
     expect(matches[0].userB).not.toHaveProperty('passwordHash')
     expect(matches[0].userB).not.toHaveProperty('email')
   })
+
+  it('excludes a match once either side has blocked the other', async () => {
+    const { alice, bob, match } = await createMatch()
+    await prisma.block.create({ data: { blockerId: bob.id, blockedUserId: alice.id } })
+
+    const aliceMatches = await listMatchesForUser(alice.id)
+    const bobMatches = await listMatchesForUser(bob.id)
+
+    expect(aliceMatches.map((m) => m.id)).not.toContain(match.id)
+    expect(bobMatches.map((m) => m.id)).not.toContain(match.id)
+  })
 })
