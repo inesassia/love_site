@@ -16,6 +16,7 @@ export default function DiscoverPage() {
   const [country, setCountry] = useState('')
   const [denomination, setDenomination] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [matchMessage, setMatchMessage] = useState<string | null>(null)
 
   async function loadProfiles(event?: React.FormEvent) {
     event?.preventDefault()
@@ -42,9 +43,27 @@ export default function DiscoverPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function handleLike(userId: string) {
-    // Le like sera envoyé à /api/likes une fois cette route disponible.
-    console.log('like', userId)
+  async function handleLike(userId: string) {
+    try {
+      const response = await fetch('/api/likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toUserId: userId }),
+      })
+
+      if (!response.ok) {
+        setError('Erreur lors du like.')
+        return
+      }
+
+      const data = await response.json()
+      if (data.matched) {
+        setMatchMessage("C'est un match !")
+        setTimeout(() => setMatchMessage(null), 3000)
+      }
+    } catch (err) {
+      setError('Erreur lors du like.')
+    }
   }
 
   return (
@@ -73,6 +92,7 @@ export default function DiscoverPage() {
         <button type="submit">Filtrer</button>
       </form>
       {error && <p role="alert">{error}</p>}
+      {matchMessage && <p role="status">{matchMessage}</p>}
       {profiles.length === 0 && !error && <p>Aucun profil à découvrir pour le moment.</p>}
       <ul>
         {profiles.map((profile) => (
