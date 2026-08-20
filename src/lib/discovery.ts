@@ -9,7 +9,7 @@ export type DiscoveryFilters = {
   denomination?: Denomination
 }
 
-function oppositeGender(gender: Gender): Gender {
+export function oppositeGender(gender: Gender): Gender {
   return gender === 'homme' ? 'femme' : 'homme'
 }
 
