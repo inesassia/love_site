@@ -516,3 +516,110 @@ textarea {
   padding: 40px 0;
   text-align: center;
 }
+
+/* matches list page */
+
+.card-link {
+  display: block;
+  color: inherit;
+}
+.card-link:hover {
+  color: inherit;
+}
+
+/* conversation page */
+
+.conversation-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.conversation-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+}
+
+.conversation-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 26px;
+  border-bottom: 1px solid var(--line);
+}
+.conversation-header h1 {
+  font-size: 19px;
+}
+.conversation-header-photo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, var(--violet) 0%, var(--violet-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: oklch(97% 0.02 300 / 0.9);
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 18px;
+}
+.conversation-header-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.conversation-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px;
+  min-height: 360px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.message-bubble {
+  max-width: 72%;
+  padding: 11px 16px;
+  border-radius: 16px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.message-bubble p {
+  margin: 0;
+}
+.message-bubble.theirs {
+  align-self: flex-start;
+  background: var(--surface-tint);
+  color: var(--ink);
+  border-bottom-left-radius: 4px;
+}
+.message-bubble.mine {
+  align-self: flex-end;
+  background: var(--violet);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.conversation-composer {
+  display: flex;
+  gap: 12px;
+  padding: 18px 26px;
+  border-top: 1px solid var(--line);
+}
+.conversation-composer input {
+  flex: 1;
+}
+.conversation-composer .btn-primary {
+  width: auto;
+  padding: 12px 26px;
+}
