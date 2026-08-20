@@ -1,0 +1,518 @@
+/* Design tokens. Light palette only for now — kept as plain custom
+   properties on :root so a future dark theme can override them under
+   `:root[data-theme='dark']` without touching any component. */
+:root {
+  --ink: oklch(20% 0.03 300);
+  --ink-soft: oklch(46% 0.025 300);
+  --paper: oklch(98% 0.01 300);
+  --surface: oklch(100% 0 0);
+  --surface-tint: oklch(94% 0.035 300);
+  --line: oklch(88% 0.02 300);
+  --violet: oklch(52% 0.19 300);
+  --violet-deep: oklch(36% 0.17 302);
+  --violet-soft: oklch(93% 0.04 300);
+  --rose: oklch(58% 0.17 350);
+  --night: oklch(15% 0.03 300);
+  --night-soft: oklch(22% 0.035 300);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  margin: 0;
+}
+
+a {
+  color: var(--violet);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: var(--violet-deep);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.15s ease;
+}
+
+/* form primitives */
+
+label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.field {
+  margin-bottom: 22px;
+}
+.hint {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+/* brand mark */
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: 21px;
+}
+.mark svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* buttons */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--violet);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px -8px oklch(52% 0.19 300 / 0.5);
+  width: 100%;
+}
+.btn-primary:hover {
+  background: var(--violet-deep);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost-dark {
+  background: transparent;
+  color: #fff;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1.5px solid oklch(100% 0 0 / 0.35);
+}
+.btn-ghost-dark:hover {
+  border-color: #fff;
+  background: oklch(100% 0 0 / 0.08);
+}
+
+/* banners */
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: oklch(96% 0.03 20);
+  color: oklch(45% 0.15 20);
+  border: 1px solid oklch(85% 0.08 20);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+
+.status-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--violet-soft);
+  color: var(--violet-deep);
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* auth pages (register/login split layout) */
+
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+.auth-hero {
+  position: relative;
+  width: 46%;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 20% 15%, oklch(40% 0.14 300) 0%, transparent 55%),
+    radial-gradient(90% 90% at 95% 90%, oklch(48% 0.15 350 / 0.5) 0%, transparent 50%),
+    linear-gradient(165deg, var(--night) 0%, var(--night-soft) 55%, oklch(30% 0.09 305) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 56px;
+  color: #fff;
+}
+.auth-hero .mark {
+  color: #fff;
+}
+.auth-hero-quote {
+  max-width: 420px;
+}
+.auth-hero-quote h1 {
+  color: #fff;
+  font-size: 34px;
+  line-height: 1.28;
+  font-style: italic;
+}
+.auth-hero-quote .hint {
+  margin: 18px 0 0;
+  color: oklch(78% 0.02 300);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.auth-hero-quote p {
+  margin: 34px 0 0;
+  color: oklch(88% 0.02 300);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.auth-form-panel {
+  width: 54%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.auth-form-panel form {
+  width: 100%;
+  max-width: 380px;
+}
+.auth-form-panel h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.auth-form-panel > form > p:first-of-type {
+  margin: 0 0 28px;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+}
+.auth-switch {
+  text-align: center;
+  margin: 24px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* authenticated app nav (discover, profile edit, matches, admin) */
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 76px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.app-nav .mark {
+  color: var(--violet-deep);
+  font-size: 20px;
+}
+.app-nav-links {
+  display: flex;
+  gap: 34px;
+}
+.nav-link {
+  padding: 10px 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-bottom: 2px solid transparent;
+}
+.nav-link.active {
+  color: var(--violet-deep);
+  border-color: var(--violet);
+}
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--violet-soft);
+  color: var(--violet-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.app-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 44px 40px 90px;
+}
+
+/* profile edit page */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 30px 34px;
+  margin-bottom: 24px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.toggle {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--surface-tint);
+  border-radius: 11px;
+  gap: 4px;
+}
+.toggle button {
+  padding: 11px 26px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: transparent;
+}
+.toggle button.active {
+  background: var(--surface);
+  color: var(--violet-deep);
+  box-shadow: 0 2px 8px -2px oklch(20% 0.05 300 / 0.25);
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.photo-tile {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  border: 1.5px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.photo-tile:hover {
+  border-color: var(--violet);
+  background: var(--violet-soft);
+}
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-tile input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.form-actions .btn-primary {
+  width: auto;
+  padding: 15px 34px;
+}
+
+/* discover page */
+
+.discover-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.discover-toolbar h1 {
+  font-size: 28px;
+}
+.discover-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.discover-filters .field {
+  margin-bottom: 0;
+  min-width: 160px;
+}
+.discover-filters label {
+  margin-bottom: 6px;
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 26px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  transition:
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+.card:hover {
+  box-shadow: 0 26px 48px -20px oklch(20% 0.06 300 / 0.22);
+  transform: translateY(-3px);
+}
+
+.card-photo {
+  position: relative;
+  height: 220px;
+  background: linear-gradient(160deg, var(--violet) 0%, var(--violet-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-photo-initial {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 52px;
+  color: oklch(97% 0.02 300 / 0.9);
+}
+
+.heart-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 6px 18px -6px oklch(20% 0.1 300 / 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.heart-btn:hover {
+  transform: scale(1.08);
+}
+.heart-btn.liked svg {
+  fill: var(--rose);
+  stroke: var(--rose);
+}
+
+.card-body {
+  padding: 20px 22px 24px;
+}
+.card-body h2 {
+  font-size: 18px;
+}
+.card-body p {
+  margin: 4px 0 12px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.empty-state {
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  padding: 40px 0;
+  text-align: center;
+}
