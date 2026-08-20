@@ -975,3 +975,194 @@ textarea {
   background: oklch(45% 0.2 350);
   color: #fff;
 }
+
+/* responsive breakpoints
+   ----------------------
+   Everything above describes the desktop layout. These queries only collapse
+   the multi-column splits and shrink the fixed paddings that would otherwise
+   force horizontal scrolling — no separate mobile design. The admin table
+   already handles its own overflow with `.admin-table-wrapper`'s
+   `overflow-x: auto`, which is the pattern to reuse for anything wide. */
+
+@media (max-width: 900px) {
+  /* photo preview column stacks above the form; paired fields go full width */
+  .profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-main {
+    padding: 34px 24px 70px;
+  }
+  .section-card {
+    padding: 24px 22px;
+  }
+
+  .landing-nav {
+    padding: 22px 26px;
+  }
+  .landing-hero {
+    padding: 72px 26px 84px;
+  }
+  .landing-hero h1 {
+    font-size: 36px;
+  }
+  .landing-section,
+  .landing-quote-section {
+    padding: 70px 26px;
+  }
+  .landing-final-cta {
+    padding: 78px 26px;
+  }
+  .landing-footer {
+    padding: 36px 26px 48px;
+  }
+}
+
+@media (max-width: 700px) {
+  /* auth pages: the decorative hero stacks above a full-width form panel
+     instead of squeezing the form into a 54% column */
+  .auth-shell {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .auth-hero {
+    width: 100%;
+    min-height: 0;
+    gap: 26px;
+    padding: 28px 24px 34px;
+  }
+  .auth-hero-quote {
+    max-width: none;
+  }
+  .auth-hero-quote h1 {
+    font-size: 26px;
+  }
+  .auth-hero-quote p {
+    margin-top: 20px;
+  }
+  .auth-form-panel {
+    width: 100%;
+    padding: 34px 24px 52px;
+  }
+
+  /* nav: brand + avatar on the first row, links centred on a second row */
+  .app-nav {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 14px 18px 0;
+    row-gap: 4px;
+  }
+  .app-nav-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 22px;
+  }
+
+  /* auto-fill tracks keep their 280px/260px minimum even in a narrower
+     container, which overflows — pin them to a single column instead */
+  .discover-grid,
+  .feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .discover-toolbar,
+  .discover-filters {
+    width: 100%;
+  }
+  .discover-filters .field {
+    min-width: 0;
+    flex: 1 1 150px;
+  }
+
+  .conversation-header,
+  .conversation-thread,
+  .conversation-composer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .message-bubble {
+    max-width: 85%;
+  }
+
+  .report-form-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-main {
+    padding: 26px 16px 60px;
+  }
+  .section-card {
+    padding: 20px 16px;
+  }
+  .app-nav {
+    padding: 12px 14px 0;
+  }
+  .app-nav-links {
+    gap: 16px;
+  }
+
+  /* multi-option toggles (genre, admin status filters) wrap instead of
+     pushing the page wider */
+  .toggle {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .toggle button {
+    padding: 10px 16px;
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .landing-nav {
+    padding: 18px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .landing-nav-links {
+    gap: 14px;
+  }
+  .landing-hero {
+    padding: 56px 18px 64px;
+  }
+  .landing-hero h1 {
+    font-size: 30px;
+  }
+  .landing-section,
+  .landing-quote-section {
+    padding: 56px 18px;
+  }
+  .landing-section-title,
+  .landing-final-cta h2 {
+    font-size: 25px;
+  }
+  .landing-final-cta {
+    padding: 60px 18px;
+  }
+  .landing-footer {
+    padding: 30px 18px 40px;
+  }
+  .feature-card {
+    padding: 24px 20px;
+  }
+
+  .conversation-composer {
+    flex-wrap: wrap;
+  }
+  .conversation-composer .btn-primary {
+    width: 100%;
+  }
+
+  .form-actions .btn-primary {
+    width: 100%;
+  }
+}
