@@ -14,7 +14,7 @@ export async function listReports(status?: ReportStatus) {
       createdAt: true,
       reporter: { select: { id: true, email: true } },
       reportedUser: {
-        select: { id: true, email: true, profile: { select: { firstName: true } } },
+        select: { id: true, profile: { select: { firstName: true } } },
       },
     },
     orderBy: { createdAt: 'desc' },

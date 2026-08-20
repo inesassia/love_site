@@ -12,7 +12,7 @@ type AdminReport = {
   status: ReportStatus
   createdAt: string
   reporter: { id: string; email: string }
-  reportedUser: { id: string; email: string; profile: { firstName: string } | null }
+  reportedUser: { id: string; profile: { firstName: string } | null }
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -158,7 +158,10 @@ export default function AdminPage() {
                 {reports.map((report) => (
                   <tr key={report.id}>
                     <td>{report.reporter.email}</td>
-                    <td>{report.reportedUser.profile?.firstName ?? report.reportedUser.email}</td>
+                    <td>
+                      {report.reportedUser.profile?.firstName ??
+                        `Utilisateur #${report.reportedUser.id.slice(0, 8)}`}
+                    </td>
                     <td>{CATEGORY_LABELS[report.category] ?? report.category}</td>
                     <td className="admin-table-reason">{report.reason}</td>
                     <td>
