@@ -34,4 +34,17 @@ describe('POST /api/register', () => {
     const response = await POST(makeRequest({ email: 'alice@example.com', password: 'AnotherPass1' }))
     expect(response.status).toBe(409)
   })
+
+  it('handles concurrent registration attempts with same email', async () => {
+    const [response1, response2] = await Promise.all([
+      POST(makeRequest({ email: 'bob@example.com', password: 'S3cret!Pass1' })),
+      POST(makeRequest({ email: 'bob@example.com', password: 'S3cret!Pass2' })),
+    ])
+
+    const statuses = [response1.status, response2.status]
+    expect(statuses.sort()).toEqual([201, 409])
+
+    const user = await prisma.user.findUnique({ where: { email: 'bob@example.com' } })
+    expect(user).not.toBeNull()
+  })
 })
