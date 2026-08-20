@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { oppositeGender } from '@/lib/discovery'
 
 async function assertParticipant(matchId: string, userId: string) {
   const match = await prisma.match.findUnique({ where: { id: matchId } })
@@ -15,11 +16,23 @@ async function assertParticipant(matchId: string, userId: string) {
 // the domain checks `likeUser` enforces on the write path (Task 8).
 async function assertCanExchangeMessages(match: { userAId: string; userBId: string }) {
   const [userA, userB] = await Promise.all([
-    prisma.user.findUnique({ where: { id: match.userAId } }),
-    prisma.user.findUnique({ where: { id: match.userBId } }),
+    prisma.user.findUnique({ where: { id: match.userAId }, include: { profile: true } }),
+    prisma.user.findUnique({ where: { id: match.userBId }, include: { profile: true } }),
   ])
   if (!userA || !userB || userA.suspended || userB.suspended) {
     throw new Error('suspended')
+  }
+
+  // Defense in depth against a gender mismatch on an existing match.
+  // `upsertProfile` now makes gender immutable, but rows created before that
+  // fix — or any future mutation path — could still leave two same-gender
+  // members sharing a live conversation, which the product rule forbids.
+  if (
+    !userA.profile ||
+    !userB.profile ||
+    userA.profile.gender !== oppositeGender(userB.profile.gender)
+  ) {
+    throw new Error('gender_mismatch')
   }
 
   const block = await prisma.block.findFirst({
@@ -71,6 +84,15 @@ export async function listMatchesForUser(userId: string) {
 
   return matches.filter((match) => {
     const otherId = match.userAId === userId ? match.userBId : match.userAId
-    return !blockedIds.has(otherId)
+    if (blockedIds.has(otherId)) return false
+
+    // Same rule as `assertCanExchangeMessages`: a match whose two participants
+    // are no longer of opposite genders must be masked everywhere, not just
+    // rejected once its conversation is opened.
+    const genderA = match.userA.profile?.gender
+    const genderB = match.userB.profile?.gender
+    if (!genderA || !genderB || genderA !== oppositeGender(genderB)) return false
+
+    return true
   })
 }

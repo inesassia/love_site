@@ -28,9 +28,17 @@ export const profileInputSchema = z.object({
 export type ProfileInput = z.infer<typeof profileInputSchema>
 
 export async function upsertProfile(userId: string, input: ProfileInput, photos?: string[]) {
+  // `gender` is immutable once a profile exists. The whole product rule
+  // (heterosexual-only matching) is derived from it: Likes, Matches and the
+  // conversations hanging off them are all validated against the genders that
+  // were current when they were created. Letting a member flip their gender
+  // afterwards would silently turn an existing match into a same-gender one.
+  // It is therefore only ever written on the `create` branch.
+  const { gender, ...mutableFields } = input
+
   return prisma.profile.upsert({
     where: { userId },
-    create: { userId, ...input, photos: photos ?? [] },
-    update: { ...input, ...(photos ? { photos } : {}) },
+    create: { userId, gender, ...mutableFields, photos: photos ?? [] },
+    update: { ...mutableFields, ...(photos ? { photos } : {}) },
   })
 }

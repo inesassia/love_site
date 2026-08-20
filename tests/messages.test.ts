@@ -7,9 +7,32 @@ afterEach(async () => {
   await resetDb()
 })
 
+async function createUserWithProfile(email: string, gender: 'homme' | 'femme') {
+  return prisma.user.create({
+    data: {
+      email,
+      passwordHash: 'x',
+      profile: {
+        create: {
+          firstName: email,
+          birthDate: new Date('1995-01-01'),
+          gender,
+          city: 'Paris',
+          country: 'France',
+          bio: 'Bio',
+          denomination: 'catholique',
+          churchAttendance: 'regulierement',
+          marriageVision: 'Famille unie',
+          favoriteVerseOrValue: 'Philippiens 4:13',
+        },
+      },
+    },
+  })
+}
+
 async function createMatch() {
-  const alice = await prisma.user.create({ data: { email: 'alice@example.com', passwordHash: 'x' } })
-  const bob = await prisma.user.create({ data: { email: 'bob@example.com', passwordHash: 'x' } })
+  const alice = await createUserWithProfile('alice@example.com', 'femme')
+  const bob = await createUserWithProfile('bob@example.com', 'homme')
   const [userAId, userBId] = [alice.id, bob.id].sort()
   const match = await prisma.match.create({ data: { userAId, userBId } })
   return { alice, bob, match }
@@ -55,6 +78,16 @@ describe('sendMessage', () => {
 
     await expect(sendMessage(match.id, alice.id, 'Salut')).rejects.toThrow('blocked')
   })
+
+  // `upsertProfile` now refuses to change an existing profile's gender, but a row
+  // written before that fix (or a future mutation path) could still leave a live
+  // match between two members of the same gender.
+  it('rejects a message once the two participants are no longer opposite genders', async () => {
+    const { alice, bob, match } = await createMatch()
+    await prisma.profile.update({ where: { userId: bob.id }, data: { gender: 'femme' } })
+
+    await expect(sendMessage(match.id, alice.id, 'Salut')).rejects.toThrow('gender_mismatch')
+  })
 })
 
 describe('listMessages', () => {
@@ -90,6 +123,15 @@ describe('listMessages', () => {
 
     await expect(listMessages(match.id, alice.id)).rejects.toThrow('blocked')
   })
+
+  it('rejects reading a conversation once the participants are no longer opposite genders', async () => {
+    const { alice, bob, match } = await createMatch()
+    await sendMessage(match.id, alice.id, 'Avant le changement de genre')
+    await prisma.profile.update({ where: { userId: bob.id }, data: { gender: 'femme' } })
+
+    await expect(listMessages(match.id, alice.id)).rejects.toThrow('gender_mismatch')
+    await expect(listMessages(match.id, bob.id)).rejects.toThrow('gender_mismatch')
+  })
 })
 
 describe('listMatchesForUser', () => {
@@ -118,6 +160,17 @@ describe('listMatchesForUser', () => {
   it('excludes a match once either side has blocked the other', async () => {
     const { alice, bob, match } = await createMatch()
     await prisma.block.create({ data: { blockerId: bob.id, blockedUserId: alice.id } })
+
+    const aliceMatches = await listMatchesForUser(alice.id)
+    const bobMatches = await listMatchesForUser(bob.id)
+
+    expect(aliceMatches.map((m) => m.id)).not.toContain(match.id)
+    expect(bobMatches.map((m) => m.id)).not.toContain(match.id)
+  })
+
+  it('excludes a match whose participants are no longer opposite genders', async () => {
+    const { alice, bob, match } = await createMatch()
+    await prisma.profile.update({ where: { userId: bob.id }, data: { gender: 'femme' } })
 
     const aliceMatches = await listMatchesForUser(alice.id)
     const bobMatches = await listMatchesForUser(bob.id)

@@ -57,4 +57,38 @@ describe('upsertProfile', () => {
     expect(profile.firstName).toBe('Alice')
     expect(profile.photos).toEqual([])
   })
+
+  it('updates the mutable fields of an existing profile', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'alice@example.com', passwordHash: 'hashed' },
+    })
+    await upsertProfile(user.id, profileInputSchema.parse(validInput))
+
+    const updated = await upsertProfile(
+      user.id,
+      profileInputSchema.parse({ ...validInput, city: 'Lyon', bio: 'Nouvelle bio' })
+    )
+
+    expect(updated.city).toBe('Lyon')
+    expect(updated.bio).toBe('Nouvelle bio')
+  })
+
+  it('never changes the gender of an existing profile', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'alice@example.com', passwordHash: 'hashed' },
+    })
+    const created = await upsertProfile(user.id, profileInputSchema.parse(validInput))
+    expect(created.gender).toBe('femme')
+
+    const updated = await upsertProfile(
+      user.id,
+      profileInputSchema.parse({ ...validInput, gender: 'homme', city: 'Lyon' })
+    )
+
+    expect(updated.gender).toBe('femme')
+    expect(updated.city).toBe('Lyon')
+
+    const persisted = await prisma.profile.findUnique({ where: { userId: user.id } })
+    expect(persisted?.gender).toBe('femme')
+  })
 })
